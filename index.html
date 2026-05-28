@@ -416,9 +416,83 @@
   <p class="note fragment" data-fragment-index="3">Same harness, same LLM — a <em>different directive</em> turns it into a different worker.</p>
 </section>
 
-<!-- ════════════════ 13 · DREAMS ════════════════ -->
+<!-- ════════════════ 13 · LLM ROUTING ════════════════ -->
+<section>
+  <p class="kicker">Spoke 4 — cost &amp; resilience</p>
+  <h2>LLM routing: <em>tiers</em> &amp; fallback</h2>
+  <p class="lead" style="margin:.2em 0 .6em;">The LLM is swappable — so RockBot routes work across <strong>cost/capability tiers</strong>, and falls back when a provider fails.</p>
+
+  <svg viewBox="0 0 960 440" style="width:90%; max-height:54vh;">
+    <defs>
+      <marker id="rt" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#8a9bb0"/></marker>
+      <marker id="rtr" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff6b6b"/></marker>
+      <linearGradient id="axis" x1="0" x2="1">
+        <stop offset="0" stop-color="#4fd18b"/>
+        <stop offset="0.5" stop-color="#2ec4ff"/>
+        <stop offset="1" stop-color="#f4a13c"/>
+      </linearGradient>
+    </defs>
+
+    <!-- cost / capability axis -->
+    <text x="120" y="28" font-size="14" class="lbl-dim">cheaper · faster</text>
+    <text x="840" y="28" text-anchor="end" font-size="14" class="lbl-dim">more capable · costlier</text>
+    <rect x="120" y="38" width="720" height="5" rx="2.5" fill="url(#axis)"/>
+
+    <!-- Balanced — required (fragment 1) -->
+    <g class="fragment fade-in" data-fragment-index="1">
+      <rect x="380" y="84" width="200" height="96" rx="16" fill="#0d1b2a" stroke="#2ec4ff" stroke-width="2.5" style="filter:drop-shadow(0 0 24px rgba(46,196,255,.28))"/>
+      <text x="480" y="126" text-anchor="middle" font-size="22" class="lbl-cyan" font-weight="700">Balanced</text>
+      <text x="480" y="154" text-anchor="middle" font-size="14" class="lbl-dim">the workhorse tier</text>
+      <rect x="428" y="66" width="104" height="26" rx="13" fill="#2ec4ff"/>
+      <text x="480" y="84" text-anchor="middle" font-size="13" fill="#06121f" font-weight="700">REQUIRED</text>
+    </g>
+
+    <!-- Low — optional (fragment 2) -->
+    <g class="fragment fade-in" data-fragment-index="2">
+      <rect x="110" y="90" width="190" height="84" rx="14" fill="#122236" stroke="#4fd18b" stroke-width="2" stroke-dasharray="6 5"/>
+      <text x="205" y="126" text-anchor="middle" font-size="19" fill="#4fd18b" font-weight="700">Low</text>
+      <text x="205" y="152" text-anchor="middle" font-size="13" class="lbl-dim">cheap, simple work</text>
+      <text x="205" y="190" text-anchor="middle" font-size="12" class="lbl-dim">optional</text>
+    </g>
+
+    <!-- High — optional (fragment 3) -->
+    <g class="fragment fade-in" data-fragment-index="3">
+      <rect x="660" y="90" width="190" height="84" rx="14" fill="#122236" stroke="#f4a13c" stroke-width="2" stroke-dasharray="6 5"/>
+      <text x="755" y="126" text-anchor="middle" font-size="19" class="lbl-gold" font-weight="700">High</text>
+      <text x="755" y="152" text-anchor="middle" font-size="13" class="lbl-dim">hard reasoning</text>
+      <text x="755" y="190" text-anchor="middle" font-size="12" class="lbl-dim">optional</text>
+    </g>
+
+    <!-- fallback chain on the Balanced tier (fragment 4) -->
+    <g class="fragment fade-in" data-fragment-index="4">
+      <path d="M480,180 L480,232 L235,232 L235,260" fill="none" stroke="#8a9bb0" stroke-width="2" marker-end="url(#rt)"/>
+      <text x="500" y="214" font-size="14" class="lbl-dim">optional fallback chain</text>
+
+      <rect x="150" y="262" width="170" height="60" rx="12" fill="#122236" stroke="#2ec4ff"/>
+      <text x="235" y="290" text-anchor="middle" font-size="15" class="lbl-cyan">Primary</text>
+      <text x="235" y="310" text-anchor="middle" font-size="12" class="lbl-dim">provider A</text>
+
+      <path d="M320,292 L400,292" fill="none" stroke="#ff6b6b" stroke-width="2" marker-end="url(#rtr)"/>
+      <text x="360" y="282" text-anchor="middle" font-size="11" fill="#ff6b6b">down</text>
+
+      <rect x="405" y="262" width="170" height="60" rx="12" fill="#122236" stroke="#24405e"/>
+      <text x="490" y="290" text-anchor="middle" font-size="15">Fallback</text>
+      <text x="490" y="310" text-anchor="middle" font-size="12" class="lbl-dim">provider B</text>
+
+      <path d="M575,292 L655,292" fill="none" stroke="#ff6b6b" stroke-width="2" marker-end="url(#rtr)"/>
+      <text x="615" y="282" text-anchor="middle" font-size="11" fill="#ff6b6b">no tokens</text>
+
+      <rect x="660" y="262" width="170" height="60" rx="12" fill="#122236" stroke="#24405e"/>
+      <text x="745" y="290" text-anchor="middle" font-size="15">Fallback</text>
+      <text x="745" y="310" text-anchor="middle" font-size="12" class="lbl-dim">provider C</text>
+    </g>
+  </svg>
+  <p class="note fragment" data-fragment-index="4"><strong>Balanced</strong> is the one requirement. Low &amp; High are levers for cost and capability — and the fallback chain keeps the agent working when a provider is down or out of tokens.</p>
+</section>
+
+<!-- ════════════════ 14 · DREAMS ════════════════ -->
 <section data-background-gradient="radial-gradient(ellipse at 50% 40%, #15203f 0%, #0a1422 72%)">
-  <p class="kicker">Spoke 4 — self-learning</p>
+  <p class="kicker">Spoke 5 — self-learning</p>
   <h2>RockBot <em>dreams</em></h2>
   <p class="lead" style="margin:.2em 0 .9em;">A background cycle that runs offline and <strong>refactors the agent's own knowledge</strong> — no user, no goals changed.</p>
 
@@ -428,14 +502,14 @@
     <div class="card green fragment fade-in"><div class="card-h">🌱 Optimize skills</div>
       <div class="card-b">Refine, merge, and cluster the skills it has written.</div></div>
     <div class="card fragment fade-in" style="border-color:var(--gold)"><div class="card-h" style="color:var(--gold)">🔀 Tune LLM routing</div>
-      <div class="card-b">Send the right work to the right model — cost &amp; quality.</div></div>
+      <div class="card-b">Learn which work belongs in which tier — Low, Balanced, or High — for the best cost/quality.</div></div>
     <div class="card fragment fade-in"><div class="card-h">🪞 Infer preferences</div>
       <div class="card-b">Notice patterns across conversations; learn how you like to work.</div></div>
   </div>
   <p class="note fragment" style="margin-top:1.1em;">Yesterday's experience makes tomorrow's agent sharper — automatically.</p>
 </section>
 
-<!-- ════════════════ 14 · LEAST PRIVILEGE ════════════════ -->
+<!-- ════════════════ 15 · LEAST PRIVILEGE ════════════════ -->
 <section>
   <p class="kicker">Governance — trust &amp; isolation</p>
   <h2>Principle of least privilege</h2>
@@ -472,7 +546,7 @@
   <p class="note fragment" data-fragment-index="3">A compromised prompt can't leak a secret the agent never had.</p>
 </section>
 
-<!-- ════════════════ 15 · SANDBOXED EXECUTION ════════════════ -->
+<!-- ════════════════ 16 · SANDBOXED EXECUTION ════════════════ -->
 <section>
   <p class="kicker">Governance — trust &amp; isolation</p>
   <h2>Untrusted code runs <em>sandboxed</em></h2>
@@ -490,7 +564,7 @@
   <p class="lead fragment" style="margin-top:1.3em;">Same pattern everywhere: <strong>assume the LLM (and the web) can be wrong or hostile</strong> — and contain it.</p>
 </section>
 
-<!-- ════════════════ 16 · RECAP ════════════════ -->
+<!-- ════════════════ 17 · RECAP ════════════════ -->
 <section data-background-gradient="radial-gradient(ellipse at 50% 30%, #16304d 0%, #0a1422 72%)">
   <p class="kicker">The working model</p>
   <div class="equation" style="margin:.3em 0 1em;">
@@ -507,6 +581,7 @@
   <div style="margin-top:.6em;">
     <span class="pill cyan">memory</span>
     <span class="pill cyan">skills</span>
+    <span class="pill cyan">LLM routing</span>
     <span class="pill" style="color:var(--green);border-color:var(--green)">self-learning</span>
     <span class="pill gold">scheduled tasks</span>
     <span class="pill gold">dreams</span>
