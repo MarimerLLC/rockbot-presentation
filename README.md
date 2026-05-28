@@ -6,6 +6,11 @@ agentic systems are **designed, governed, and extended**, using **RockBot**
 
 By Rockford Lhotka · [blog.lhotka.net](https://blog.lhotka.net)
 
+**▶ Play the deck live: https://marimerllc.github.io/rockbot-presentation/**
+
+(Arrow keys to navigate, `F` for fullscreen, `S` for speaker notes, `Esc` for the
+slide overview. Published via GitHub Pages — every push to `main` rebuilds it.)
+
 ## Abstract
 
 > An agent is not just an LLM with tools bolted on. In practice, it's the
