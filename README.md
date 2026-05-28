@@ -6,6 +6,22 @@ agentic systems are **designed, governed, and extended**, using **RockBot**
 
 By Rockford Lhotka · [blog.lhotka.net](https://blog.lhotka.net)
 
+## Abstract
+
+> An agent is not just an LLM with tools bolted on. In practice, it's the
+> combination of three things: a harness that controls execution, an LLM that
+> reasons and generates, and directives that shape behavior. This talk uses
+> RockBot as a concrete example of that architecture and shows how the pieces fit
+> together in a real system. From there, we'll look at what becomes possible once
+> the core is solid: memory that preserves context, skills that package repeatable
+> behavior, self-learning and skill evolution that improve the system over time,
+> and integration layers like MCP and A2A that let agents reach tools and
+> collaborate with other agents. The point is to move from abstract "agent" talk
+> to a working model for how agentic systems are actually designed, governed, and
+> extended.
+
+The demo throughout is **RockBot** — [rockbot.dev](https://rockbot.dev).
+
 ## The thesis
 
 The deck argues that an agent is not "an LLM with tools bolted on." In practice it's
