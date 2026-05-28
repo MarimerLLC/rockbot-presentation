@@ -56,10 +56,12 @@ the core right lets the system extend: memory, skills, self-learning, scheduled 
 10. Memory: three tiers + a graph
 11. Skills: fixed guides & evolving know-how
 12. Tasks on a schedule
-13. RockBot dreams
-14. Principle of least privilege
-15. Untrusted code runs sandboxed
-16. The working model (recap)
+13. LLM routing: tiers & fallback
+14. The orchestrator delegates down (primary · subagents · workers · wisps)
+15. RockBot dreams
+16. Principle of least privilege
+17. Untrusted code runs sandboxed
+18. The working model (recap)
 
 ## Viewing the deck
 

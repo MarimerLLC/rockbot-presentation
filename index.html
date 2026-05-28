@@ -490,6 +490,62 @@
   <p class="note fragment" data-fragment-index="4"><strong>Balanced</strong> is the one requirement. Low &amp; High are levers for cost and capability — and the fallback chain keeps the agent working when a provider is down or out of tokens.</p>
 </section>
 
+<!-- ════════════════ 13B · DELEGATION HIERARCHY ════════════════ -->
+<section>
+  <p class="kicker">Spoke 4 — cost &amp; resilience</p>
+  <h2>The orchestrator delegates <em>down</em></h2>
+  <p class="lead" style="margin:.2em 0 .5em;">The primary agent runs the conversation — and pushes each task to the <strong>lightest executor that can do it.</strong> Routine work drops to a cheap model, or no model at all.</p>
+
+  <svg viewBox="0 0 980 470" style="width:90%; max-height:56vh;">
+    <defs>
+      <marker id="dl" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#8a9bb0"/></marker>
+    </defs>
+
+    <!-- Primary -->
+    <g class="fragment fade-in" data-fragment-index="1">
+      <rect x="60" y="38" width="830" height="74" rx="14" fill="#0d1b2a" stroke="#f4a13c" stroke-width="2.5" style="filter:drop-shadow(0 0 22px rgba(244,161,60,.22))"/>
+      <text x="110" y="70" font-size="19" class="lbl-gold" font-weight="700">Primary agent</text>
+      <text x="110" y="94" font-size="13" class="lbl-dim">User-facing orchestrator — runs the conversation, does some work itself.</text>
+      <rect x="668" y="56" width="204" height="38" rx="10" fill="#16243a" stroke="#f4a13c"/>
+      <text x="770" y="80" text-anchor="middle" font-size="14" class="lbl-gold">full model · $$$$</text>
+    </g>
+
+    <!-- Subagents -->
+    <g class="fragment fade-in" data-fragment-index="2">
+      <path d="M95,112 L95,146" fill="none" stroke="#8a9bb0" stroke-width="2" marker-end="url(#dl)"/>
+      <text x="112" y="135" font-size="12" class="lbl-dim">delegates</text>
+      <rect x="60" y="148" width="830" height="74" rx="14" fill="#122236" stroke="#2ec4ff" stroke-width="2"/>
+      <text x="110" y="180" font-size="19" class="lbl-cyan" font-weight="700">Subagents</text>
+      <text x="110" y="204" font-size="13" class="lbl-dim">Run independently, off your thread. Same toolkit and all 3 LLM tiers — but never talk to the user.</text>
+      <rect x="668" y="166" width="204" height="38" rx="10" fill="#16243a" stroke="#2ec4ff"/>
+      <text x="770" y="190" text-anchor="middle" font-size="14" class="lbl-cyan">all 3 tiers · $$$$</text>
+    </g>
+
+    <!-- Workers -->
+    <g class="fragment fade-in" data-fragment-index="3">
+      <path d="M95,222 L95,256" fill="none" stroke="#8a9bb0" stroke-width="2" marker-end="url(#dl)"/>
+      <text x="112" y="245" font-size="12" class="lbl-dim">spawn</text>
+      <rect x="60" y="258" width="830" height="74" rx="14" fill="#122236" stroke="#4fd18b" stroke-width="2"/>
+      <text x="110" y="290" font-size="19" font-weight="700" fill="#4fd18b">Workers</text>
+      <text x="110" y="314" font-size="13" class="lbl-dim">Small, single-purpose agents. Usually spawned by a subagent for one focused task.</text>
+      <rect x="668" y="276" width="204" height="38" rx="10" fill="#16243a" stroke="#4fd18b"/>
+      <text x="770" y="300" text-anchor="middle" font-size="14" fill="#4fd18b">Low tier · $</text>
+    </g>
+
+    <!-- Wisps -->
+    <g class="fragment fade-in" data-fragment-index="4">
+      <path d="M95,332 L95,366" fill="none" stroke="#8a9bb0" stroke-width="2" marker-end="url(#dl)"/>
+      <text x="112" y="355" font-size="12" class="lbl-dim">or run a</text>
+      <rect x="60" y="368" width="830" height="74" rx="14" fill="#0e1726" stroke="#8a9bb0" stroke-width="2" stroke-dasharray="7 5"/>
+      <text x="110" y="400" font-size="19" font-weight="700" fill="#cdd8e6">Wisps</text>
+      <text x="110" y="424" font-size="13" class="lbl-dim">No LLM at all — just run a pre-built script of tool calls. A pure workflow executor.</text>
+      <rect x="668" y="386" width="204" height="38" rx="10" fill="#0e1726" stroke="#8a9bb0" stroke-dasharray="5 4"/>
+      <text x="770" y="410" text-anchor="middle" font-size="14" fill="#cdd8e6">no LLM · ~free</text>
+    </g>
+  </svg>
+  <p class="note fragment" data-fragment-index="4">Primary and subagents both reach for any tier. The savings come below: <strong>workers</strong> on the Low tier, <strong>wisps</strong> with no model at all.</p>
+</section>
+
 <!-- ════════════════ 14 · DREAMS ════════════════ -->
 <section data-background-gradient="radial-gradient(ellipse at 50% 40%, #15203f 0%, #0a1422 72%)">
   <p class="kicker">Spoke 5 — self-learning</p>
