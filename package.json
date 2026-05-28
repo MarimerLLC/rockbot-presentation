@@ -1,0 +1,14 @@
+{
+  "name": "rockbot-agentic-architecture-deck",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Reveal.js deck: Agentic Architecture in Practice — Harness, LLM, Directives",
+  "scripts": {
+    "pdf": "node export-pdf.mjs",
+    "postinstall": "playwright install chromium"
+  },
+  "devDependencies": {
+    "playwright": "^1.60.0"
+  }
+}

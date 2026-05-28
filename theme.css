@@ -1,0 +1,134 @@
+/* ─────────────────────────────────────────────────────────────
+   RockBot talk theme — dark navy + orange/gold + cyan glow
+   Palette pulled from the RockBot logo.
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --bg:        #0a1422;
+  --bg-2:      #0d1b2a;
+  --panel:     #122236;
+  --ink:       #e8eef5;
+  --ink-dim:   #93a6bd;
+  --steel:     #8a9bb0;
+  --gold:      #f4a13c;
+  --gold-2:    #e8821e;
+  --cyan:      #2ec4ff;
+  --cyan-2:    #1ba3e0;
+  --green:     #4fd18b;
+  --red:       #ff6b6b;
+  --line:      #24405e;
+}
+
+.reveal-viewport { background: var(--bg); }
+.reveal {
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  color: var(--ink);
+  font-size: 32px;
+}
+
+/* subtle vignette + grid texture on every slide background */
+.reveal .backgrounds { background:
+  radial-gradient(ellipse at 50% 0%, #13263d 0%, var(--bg) 70%); }
+
+.reveal h1, .reveal h2, .reveal h3 {
+  color: var(--ink);
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.reveal h1 { font-size: 2.1em; }
+.reveal h2 { font-size: 1.5em; }
+.reveal h3 { font-size: 1.1em; color: var(--gold); }
+
+.reveal a { color: var(--cyan); }
+.reveal strong { color: var(--gold); font-weight: 700; }
+.reveal em { color: var(--cyan); font-style: normal; }
+
+.reveal .slide-number { color: var(--ink-dim); background: transparent; }
+
+/* accent kicker above titles */
+.kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.5em;
+  color: var(--cyan);
+  font-weight: 600;
+  margin-bottom: 0.4em;
+}
+
+/* the master equation */
+.equation {
+  font-size: 1.2em;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  flex-wrap: wrap;
+}
+.equation .term {
+  padding: 0.35em 0.7em;
+  border-radius: 14px;
+  border: 2px solid var(--line);
+  background: var(--panel);
+  transition: all .4s ease;
+}
+.equation .op { color: var(--ink-dim); font-weight: 400; }
+.term.harness  { border-color: var(--gold);  box-shadow: 0 0 26px -8px var(--gold); color: var(--gold); }
+.term.llm      { border-color: var(--cyan);  box-shadow: 0 0 26px -8px var(--cyan); color: var(--cyan); }
+.term.directive{ border-color: var(--green); box-shadow: 0 0 26px -8px var(--green); color: var(--green); }
+.term.agent    { border-color: var(--ink-dim); color: var(--ink); }
+
+/* generic cards */
+.cards { display: flex; gap: 0.7em; justify-content: center; align-items: stretch; flex-wrap: wrap; }
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 0.8em 1em;
+  text-align: left;
+  flex: 1 1 0;
+  min-width: 220px;
+}
+.card .card-h { color: var(--gold); font-weight: 700; font-size: 0.95em; margin-bottom: 0.25em; display:flex; align-items:center; gap:.4em;}
+.card .card-b { color: var(--ink-dim); font-size: 0.66em; line-height: 1.45; }
+.card.cyan   .card-h { color: var(--cyan); }
+.card.green  .card-h { color: var(--green); }
+
+/* pill / tag */
+.pill {
+  display:inline-block; padding:0.18em 0.7em; border-radius:999px;
+  border:1px solid var(--line); background:var(--bg-2);
+  font-size:0.6em; color:var(--ink-dim); margin:0.15em;
+}
+.pill.gold { color:var(--gold); border-color:var(--gold); }
+.pill.cyan { color:var(--cyan); border-color:var(--cyan); }
+
+.lead { color: var(--ink-dim); font-size: 0.9em; line-height: 1.5; }
+.big  { font-size: 1.4em; font-weight: 700; }
+.dim  { color: var(--ink-dim); }
+.note { font-size: 0.6em; color: var(--steel); }
+
+.reveal section img.logo { border:none; box-shadow:none; background:none; }
+
+/* footer brand mark */
+.brandmark {
+  position: fixed; bottom: 14px; left: 18px; z-index: 30;
+  display:flex; align-items:center; gap:8px;
+  font-size: 13px; color: var(--ink-dim); letter-spacing:.04em;
+}
+.brandmark img { width: 26px; height: 26px; }
+
+/* SVG diagram defaults */
+.reveal svg text { font-family: "Inter","Segoe UI",sans-serif; fill: var(--ink); }
+.reveal svg .lbl-dim { fill: var(--ink-dim); }
+.reveal svg .lbl-gold { fill: var(--gold); }
+.reveal svg .lbl-cyan { fill: var(--cyan); }
+
+/* fragment that glows in rather than just appears */
+.reveal .fragment.glow { opacity: 0; transition: all .5s ease; }
+.reveal .fragment.glow.visible { opacity: 1; }
+
+ul.clean { list-style: none; margin-left: 0; }
+ul.clean li { margin: 0.5em 0; padding-left: 1.4em; position: relative; }
+ul.clean li::before { content: "▹"; color: var(--gold); position: absolute; left: 0; }

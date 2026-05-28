@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic Architecture in Practice — Harness · LLM · Directives</title>
+  <link rel="icon" href="assets/favicon.ico">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" id="theme">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+</head>
+<body>
+<div class="brandmark"><img src="assets/rockbot.png" alt="">rockbot.dev</div>
+<div class="reveal"><div class="slides">
+
+<!-- ════════════════ 1 · TITLE ════════════════ -->
+<section data-background-gradient="radial-gradient(ellipse at 50% 30%, #16304d 0%, #0a1422 70%)">
+  <img src="assets/rockbot.png" class="logo" style="width:190px; filter: drop-shadow(0 0 40px rgba(46,196,255,.35));">
+  <h1 style="margin:.2em 0 0;">Agentic Architecture<br>in Practice</h1>
+  <p style="font-size:1.1em; color:var(--gold); font-weight:600; letter-spacing:.04em; margin:.3em 0;">
+    Harness · LLM · Directives</p>
+  <p class="lead" style="margin-top:1.2em;">A working model for how agentic systems are<br>designed, governed, and extended — with <strong>RockBot</strong> as the example.</p>
+  <p class="note" style="margin-top:1.6em;">Rockford Lhotka &nbsp;·&nbsp; rockbot.dev &nbsp;·&nbsp; blog.lhotka.net</p>
+</section>
+
+<!-- ════════════════ 2 · WHAT IS AN AGENT (the equation) ════════════════ -->
+<section>
+  <p class="kicker">The thesis</p>
+  <h2>What <em>is</em> an agent?</h2>
+  <p class="lead" style="margin:.4em 0 1.1em;">Not "an LLM with tools bolted on." In practice it's three distinct parts:</p>
+
+  <div class="equation">
+    <span class="term agent fragment fade-in-then-semi-out" data-fragment-index="4">Agent</span>
+    <span class="op fragment" data-fragment-index="4">=</span>
+    <span class="term harness fragment" data-fragment-index="1">Harness</span>
+    <span class="op fragment" data-fragment-index="1">+</span>
+    <span class="term llm fragment" data-fragment-index="2">LLM</span>
+    <span class="op fragment" data-fragment-index="2">+</span>
+    <span class="term directive fragment" data-fragment-index="3">Directives</span>
+  </div>
+
+  <div class="cards" style="margin-top:1.4em;">
+    <div class="card fragment" data-fragment-index="1"><div class="card-h">Harness</div>
+      <div class="card-b">The code that controls execution — the loop.</div></div>
+    <div class="card cyan fragment" data-fragment-index="2"><div class="card-h">LLM</div>
+      <div class="card-b">Reasons and generates. A black box.</div></div>
+    <div class="card green fragment" data-fragment-index="3"><div class="card-h">Directives</div>
+      <div class="card-b">Shape behavior — scope, tone, rules.</div></div>
+  </div>
+  <p class="note fragment" data-fragment-index="4" style="margin-top:1em;">Pull any one out and you don't have an agent.</p>
+</section>
+
+<!-- ════════════════ 3 · THE LLM IS A BLACK BOX ════════════════ -->
+<section>
+  <p class="kicker">Part 1 of 3 — the LLM</p>
+  <h2>The LLM is a <em>black box</em></h2>
+  <p class="lead" style="margin:.3em 0 .8em;">It's a microservice: <strong>text in → text out.</strong> Nothing more.</p>
+
+  <svg viewBox="0 0 900 300" style="width:78%; max-height:42vh;">
+    <!-- input -->
+    <rect x="20" y="120" width="170" height="60" rx="10" fill="#122236" stroke="#24405e"/>
+    <text x="105" y="156" text-anchor="middle" font-size="20" class="lbl-cyan">prompt (text)</text>
+    <!-- arrow in -->
+    <line x1="195" y1="150" x2="320" y2="150" stroke="#2ec4ff" stroke-width="3" marker-end="url(#ar)"/>
+    <!-- the box -->
+    <rect x="325" y="70" width="250" height="160" rx="18" fill="#0d1b2a" stroke="#2ec4ff" stroke-width="2.5" style="filter:drop-shadow(0 0 24px rgba(46,196,255,.25))"/>
+    <text x="450" y="140" text-anchor="middle" font-size="30" font-weight="700" fill="#2ec4ff">LLM</text>
+    <text x="450" y="172" text-anchor="middle" font-size="16" class="lbl-dim">stateless · no memory · no tools</text>
+    <!-- arrow out -->
+    <line x1="580" y1="150" x2="705" y2="150" stroke="#f4a13c" stroke-width="3" marker-end="url(#arg)"/>
+    <!-- output -->
+    <rect x="710" y="120" width="170" height="60" rx="10" fill="#122236" stroke="#24405e"/>
+    <text x="795" y="156" text-anchor="middle" font-size="20" class="lbl-gold">completion (text)</text>
+    <defs>
+      <marker id="ar" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2ec4ff"/></marker>
+      <marker id="arg" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#f4a13c"/></marker>
+    </defs>
+  </svg>
+
+  <div class="cards" style="margin-top:.6em;">
+    <div class="card fragment glow"><div class="card-b" style="font-size:.7em;">It doesn't remember the last call.</div></div>
+    <div class="card fragment glow"><div class="card-b" style="font-size:.7em;">It can't call a tool — it just <em>writes</em> that it wants to.</div></div>
+    <div class="card fragment glow"><div class="card-b" style="font-size:.7em;">It takes no action. It only generates text.</div></div>
+  </div>
+  <p class="note fragment" style="margin-top:.7em;">So where does all the "agent" behavior come from? &nbsp;→</p>
+</section>
+
+<!-- ════════════════ 4 · THE HARNESS IS THE LOOP ════════════════ -->
+<section>
+  <p class="kicker">Part 2 of 3 — the harness</p>
+  <h2>The harness is <em>the loop</em></h2>
+  <p class="lead" style="margin:.2em 0 .6em;">This is where the real engineering lives.</p>
+
+  <svg viewBox="0 0 960 380" style="width:92%; max-height:52vh;">
+    <defs>
+      <marker id="f" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#8a9bb0"/></marker>
+      <marker id="fg" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#f4a13c"/></marker>
+    </defs>
+    <!-- nodes -->
+    <g class="fragment fade-in" data-fragment-index="1">
+      <rect x="20" y="40" width="150" height="64" rx="12" fill="#122236" stroke="#24405e"/>
+      <text x="95" y="70" text-anchor="middle" font-size="17">User input</text>
+      <text x="95" y="92" text-anchor="middle" font-size="13" class="lbl-dim">a request</text>
+    </g>
+    <g class="fragment fade-in" data-fragment-index="2">
+      <rect x="210" y="40" width="160" height="64" rx="12" fill="#122236" stroke="#f4a13c"/>
+      <text x="290" y="64" text-anchor="middle" font-size="16" class="lbl-gold">Build prompt</text>
+      <text x="290" y="86" text-anchor="middle" font-size="12" class="lbl-dim">+ directives, memory, tools</text>
+    </g>
+    <g class="fragment fade-in" data-fragment-index="3">
+      <rect x="410" y="40" width="150" height="64" rx="12" fill="#0d1b2a" stroke="#2ec4ff" stroke-width="2"/>
+      <text x="485" y="78" text-anchor="middle" font-size="18" class="lbl-cyan">Call LLM</text>
+    </g>
+    <g class="fragment fade-in" data-fragment-index="4">
+      <rect x="600" y="40" width="170" height="64" rx="12" fill="#122236" stroke="#24405e"/>
+      <text x="685" y="64" text-anchor="middle" font-size="16">Parse result</text>
+      <text x="685" y="86" text-anchor="middle" font-size="12" class="lbl-dim">text? or tool call?</text>
+    </g>
+    <!-- top arrows -->
+    <g class="fragment fade-in" data-fragment-index="2"><line x1="170" y1="72" x2="206" y2="72" stroke="#8a9bb0" stroke-width="2.5" marker-end="url(#f)"/></g>
+    <g class="fragment fade-in" data-fragment-index="3"><line x1="370" y1="72" x2="406" y2="72" stroke="#8a9bb0" stroke-width="2.5" marker-end="url(#f)"/></g>
+    <g class="fragment fade-in" data-fragment-index="4"><line x1="560" y1="72" x2="596" y2="72" stroke="#8a9bb0" stroke-width="2.5" marker-end="url(#f)"/></g>
+
+    <!-- inner tool loop -->
+    <g class="fragment fade-in" data-fragment-index="5">
+      <rect x="430" y="200" width="200" height="70" rx="12" fill="#152a16" stroke="#4fd18b"/>
+      <text x="530" y="230" text-anchor="middle" font-size="16" fill="#4fd18b">Run tool</text>
+      <text x="530" y="252" text-anchor="middle" font-size="12" class="lbl-dim">feed result back in</text>
+      <!-- down from parse to tool -->
+      <path d="M685,104 L685,235 L632,235" fill="none" stroke="#4fd18b" stroke-width="2.5" marker-end="url(#f)"/>
+      <text x="700" y="160" font-size="13" fill="#4fd18b">tool call</text>
+      <!-- back up from tool to call LLM -->
+      <path d="M460,200 L460,120 L485,120 L485,106" fill="none" stroke="#4fd18b" stroke-width="2.5" marker-end="url(#f)"/>
+      <text x="372" y="150" font-size="13" fill="#4fd18b">loop</text>
+    </g>
+
+    <!-- final answer -->
+    <g class="fragment fade-in" data-fragment-index="6">
+      <path d="M685,104 L685,330 L210,330" fill="none" stroke="#f4a13c" stroke-width="2.5" marker-end="url(#fg)"/>
+      <text x="720" y="320" font-size="13" class="lbl-gold">final text</text>
+      <rect x="40" y="300" width="160" height="60" rx="12" fill="#122236" stroke="#f4a13c"/>
+      <text x="120" y="335" text-anchor="middle" font-size="16" class="lbl-gold">Show user</text>
+    </g>
+  </svg>
+  <p class="note fragment" data-fragment-index="5">The <em style="color:var(--green)">inner loop</em> — call a tool, feed the result back, call the LLM again — is what makes an agent feel agentic.</p>
+</section>
+
+<!-- ════════════════ 5 · DIRECTIVES ════════════════ -->
+<section>
+  <p class="kicker">Part 3 of 3 — directives</p>
+  <h2>Directives <em>shape behavior</em></h2>
+  <p class="lead" style="margin:.2em 0 .9em;">Scope · tone · rules-for-success. In RockBot, literally markdown files, composed into the system prompt.</p>
+
+  <div class="cards">
+    <div class="card fragment fade-in-then-semi-out"><div class="card-h">📜 soul.md</div>
+      <div class="card-b"><strong style="color:var(--gold)">Scope &amp; identity.</strong><br>Who the agent is, what it's for.</div></div>
+    <div class="card green fragment fade-in-then-semi-out"><div class="card-h">⚖️ directives.md</div>
+      <div class="card-b"><strong style="color:var(--green)">Rules.</strong><br>Constraints that keep it safe and on-task.</div></div>
+    <div class="card cyan fragment fade-in-then-semi-out"><div class="card-h">🎨 style.md</div>
+      <div class="card-b"><strong style="color:var(--cyan)">Tone.</strong><br>How it communicates.</div></div>
+  </div>
+
+  <div class="fragment" style="margin-top:1.3em;">
+    <p class="lead">Layered &amp; composable — base persona, then per-task, then per-skill:</p>
+    <p style="margin-top:.4em;">
+      <span class="pill gold">soul + directives + style</span>
+      <span class="op" style="color:var(--ink-dim)">+</span>
+      <span class="pill cyan">task directive</span>
+      <span class="op" style="color:var(--ink-dim)">+</span>
+      <span class="pill">skill</span>
+      <span class="op" style="color:var(--ink-dim)">→</span>
+      <span class="pill" style="color:var(--green);border-color:var(--green)">system prompt</span>
+    </p>
+  </div>
+  <p class="note fragment" style="margin-top:1em;">Change behavior without changing code.</p>
+</section>
+
+<!-- ════════════════ 6 · MEET ROCKBOT ════════════════ -->
+<section data-background-gradient="radial-gradient(ellipse at 70% 50%, #16304d 0%, #0a1422 70%)">
+  <div style="display:flex; align-items:center; gap:1.4em;">
+    <img src="assets/rockbot.png" class="logo" style="width:230px; filter: drop-shadow(0 0 36px rgba(244,161,60,.3));">
+    <div style="text-align:left;">
+      <p class="kicker">The concrete example</p>
+      <h2 style="margin:.1em 0;">Meet RockBot</h2>
+      <p class="lead" style="margin:.5em 0 .8em;">An <strong>event-driven, process-isolated</strong> autonomous agent framework for .NET.</p>
+      <p class="big" style="color:var(--cyan); line-height:1.2;">"Nothing trusts<br>the LLM."</p>
+      <div style="margin-top:1em;">
+        <span class="pill">message bus (RabbitMQ)</span>
+        <span class="pill">isolated processes</span>
+        <span class="pill">least privilege</span>
+        <span class="pill">MIT · open source</span>
+      </div>
+    </div>
+  </div>
+  <p class="note fragment" style="margin-top:1.4em;">Everything that follows is a real subsystem in this codebase.</p>
+</section>
+
+<!-- ════════════════ 7 · TOOLS / MCP ════════════════ -->
+<section>
+  <p class="kicker">Reaching outward</p>
+  <h2>Tools: how the harness <em>acts</em></h2>
+  <p class="lead" style="margin:.2em 0 .7em;">The LLM only <em>asks</em> for a tool. The harness routes and runs it — then feeds the result back.</p>
+
+  <svg viewBox="0 0 940 300" style="width:88%; max-height:42vh;">
+    <defs><marker id="t" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#8a9bb0"/></marker></defs>
+    <!-- harness center -->
+    <rect x="370" y="110" width="200" height="80" rx="14" fill="#0d1b2a" stroke="#f4a13c" stroke-width="2.5"/>
+    <text x="470" y="145" text-anchor="middle" font-size="20" class="lbl-gold">Harness</text>
+    <text x="470" y="170" text-anchor="middle" font-size="13" class="lbl-dim">tool registry · dispatch</text>
+
+    <!-- MCP -->
+    <g class="fragment fade-in" data-fragment-index="1">
+      <rect x="720" y="20" width="200" height="62" rx="12" fill="#122236" stroke="#2ec4ff"/>
+      <text x="820" y="48" text-anchor="middle" font-size="17" class="lbl-cyan">MCP servers</text>
+      <text x="820" y="68" text-anchor="middle" font-size="12" class="lbl-dim">email, calendar, drive…</text>
+      <line x1="570" y1="135" x2="716" y2="60" stroke="#8a9bb0" stroke-width="2.5" marker-end="url(#t)"/>
+    </g>
+    <!-- CLI / scripts -->
+    <g class="fragment fade-in" data-fragment-index="2">
+      <rect x="720" y="118" width="200" height="62" rx="12" fill="#122236" stroke="#24405e"/>
+      <text x="820" y="146" text-anchor="middle" font-size="17">CLI / scripts</text>
+      <text x="820" y="166" text-anchor="middle" font-size="12" class="lbl-dim">sandboxed Python</text>
+      <line x1="570" y1="150" x2="716" y2="150" stroke="#8a9bb0" stroke-width="2.5" marker-end="url(#t)"/>
+    </g>
+    <!-- APIs / web -->
+    <g class="fragment fade-in" data-fragment-index="3">
+      <rect x="720" y="216" width="200" height="62" rx="12" fill="#122236" stroke="#24405e"/>
+      <text x="820" y="244" text-anchor="middle" font-size="17">Web &amp; APIs</text>
+      <text x="820" y="264" text-anchor="middle" font-size="12" class="lbl-dim">search · fetch page</text>
+      <line x1="570" y1="165" x2="716" y2="240" stroke="#8a9bb0" stroke-width="2.5" marker-end="url(#t)"/>
+    </g>
+    <!-- llm feeding harness -->
+    <rect x="40" y="118" width="170" height="64" rx="12" fill="#0d1b2a" stroke="#2ec4ff" stroke-width="2"/>
+    <text x="125" y="155" text-anchor="middle" font-size="18" class="lbl-cyan">LLM</text>
+    <line x1="210" y1="150" x2="366" y2="150" stroke="#2ec4ff" stroke-width="2.5" marker-end="url(#t)"/>
+    <text x="288" y="140" text-anchor="middle" font-size="13" class="lbl-cyan">"call X"</text>
+  </svg>
+  <p class="note fragment" data-fragment-index="1">RockBot leans on <strong>MCP</strong> heavily — secrets live in the MCP servers, not the agent. <span class="dim">(more on that later)</span></p>
+</section>
+
+<!-- ════════════════ 8 · A2A PEERS ════════════════ -->
+<section>
+  <p class="kicker">Reaching outward</p>
+  <h2>Peers: agents calling <em>agents</em></h2>
+  <p class="lead" style="margin:.2em 0 .9em;">The <strong>A2A</strong> protocol lets RockBot delegate to other agents — or be delegated to.</p>
+
+  <svg viewBox="0 0 900 320" style="width:80%; max-height:46vh;">
+    <defs><marker id="a" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#f4a13c"/></marker></defs>
+    <!-- rockbot -->
+    <circle cx="200" cy="160" r="78" fill="#0d1b2a" stroke="#f4a13c" stroke-width="2.5"/>
+    <text x="200" y="155" text-anchor="middle" font-size="20" class="lbl-gold">RockBot</text>
+    <text x="200" y="182" text-anchor="middle" font-size="13" class="lbl-dim">orchestrator</text>
+
+    <g class="fragment fade-in" data-fragment-index="1">
+      <circle cx="680" cy="70" r="62" fill="#122236" stroke="#2ec4ff" stroke-width="2"/>
+      <text x="680" y="76" text-anchor="middle" font-size="16" class="lbl-cyan">Peer agent</text>
+      <path d="M270,128 Q470,40 620,72" fill="none" stroke="#f4a13c" stroke-width="2.5" marker-end="url(#a)"/>
+      <text x="450" y="70" text-anchor="middle" font-size="13" class="lbl-gold">delegate task</text>
+    </g>
+    <g class="fragment fade-in" data-fragment-index="2">
+      <circle cx="680" cy="250" r="62" fill="#122236" stroke="#2ec4ff" stroke-width="2"/>
+      <text x="680" y="256" text-anchor="middle" font-size="16" class="lbl-cyan">Peer agent</text>
+      <path d="M620,250 Q470,300 270,196" fill="none" stroke="#2ec4ff" stroke-width="2.5" marker-end="url(#a)"/>
+      <text x="450" y="295" text-anchor="middle" font-size="13" class="lbl-cyan">…or calls in</text>
+    </g>
+  </svg>
+  <p class="note fragment" data-fragment-index="2">A tool call reaches a service. An <em>A2A</em> call reaches a reasoning peer — its own harness, LLM, and directives.</p>
+</section>
+
+<!-- ════════════════ 9 · THE HARNESS HANDLES A LOT (hub / agenda) ════════════════ -->
+<section>
+  <p class="kicker">The pivot</p>
+  <h2>The harness handles a <em>lot</em></h2>
+  <p class="lead" style="margin:.2em 0 .4em;">Once the core (loop + LLM + directives) is solid, this is what becomes possible:</p>
+
+  <svg viewBox="0 0 960 420" style="width:90%; max-height:56vh;">
+    <!-- center -->
+    <circle cx="480" cy="210" r="86" fill="#0d1b2a" stroke="#f4a13c" stroke-width="2.5" style="filter:drop-shadow(0 0 26px rgba(244,161,60,.25))"/>
+    <text x="480" y="205" text-anchor="middle" font-size="20" class="lbl-gold">Harness</text>
+    <text x="480" y="230" text-anchor="middle" font-size="13" class="lbl-dim">the core</text>
+
+    <!-- spokes: define as fragments -->
+    <g class="fragment fade-in" data-fragment-index="1">
+      <line x1="420" y1="150" x2="250" y2="70" stroke="#24405e" stroke-width="2"/>
+      <rect x="120" y="40" width="160" height="58" rx="12" fill="#122236" stroke="#2ec4ff"/>
+      <text x="200" y="74" text-anchor="middle" font-size="16" class="lbl-cyan">Memory</text>
+    </g>
+    <g class="fragment fade-in" data-fragment-index="2">
+      <line x1="540" y1="150" x2="710" y2="70" stroke="#24405e" stroke-width="2"/>
+      <rect x="680" y="40" width="160" height="58" rx="12" fill="#122236" stroke="#2ec4ff"/>
+      <text x="760" y="74" text-anchor="middle" font-size="16" class="lbl-cyan">Skills</text>
+    </g>
+    <g class="fragment fade-in" data-fragment-index="3">
+      <line x1="394" y1="210" x2="250" y2="210" stroke="#24405e" stroke-width="2"/>
+      <rect x="90" y="181" width="160" height="58" rx="12" fill="#122236" stroke="#24405e"/>
+      <text x="170" y="215" text-anchor="middle" font-size="16">Tool calling</text>
+    </g>
+    <g class="fragment fade-in" data-fragment-index="4">
+      <line x1="566" y1="210" x2="710" y2="210" stroke="#24405e" stroke-width="2"/>
+      <rect x="710" y="181" width="170" height="58" rx="12" fill="#122236" stroke="#24405e"/>
+      <text x="795" y="215" text-anchor="middle" font-size="16">A2A peers</text>
+    </g>
+    <g class="fragment fade-in" data-fragment-index="5">
+      <line x1="420" y1="270" x2="250" y2="350" stroke="#24405e" stroke-width="2"/>
+      <rect x="100" y="322" width="180" height="58" rx="12" fill="#122236" stroke="#24405e"/>
+      <text x="190" y="356" text-anchor="middle" font-size="16">Scheduled tasks</text>
+    </g>
+    <g class="fragment fade-in" data-fragment-index="6">
+      <line x1="540" y1="270" x2="710" y2="350" stroke="#24405e" stroke-width="2"/>
+      <rect x="680" y="322" width="190" height="58" rx="12" fill="#122236" stroke="#4fd18b"/>
+      <text x="775" y="356" text-anchor="middle" font-size="16" fill="#4fd18b">Self-optimization</text>
+    </g>
+    <g class="fragment fade-in" data-fragment-index="7">
+      <line x1="480" y1="296" x2="480" y2="356" stroke="#24405e" stroke-width="2"/>
+      <rect x="400" y="356" width="160" height="50" rx="12" fill="#122236" stroke="#24405e"/>
+      <text x="480" y="386" text-anchor="middle" font-size="15" class="lbl-dim">LLM efficiency</text>
+    </g>
+  </svg>
+  <p class="note fragment" data-fragment-index="7">The rest of the talk walks the spokes.</p>
+</section>
+
+<!-- ════════════════ 10 · MEMORY ════════════════ -->
+<section>
+  <p class="kicker">Spoke 1 — context that persists</p>
+  <h2>Memory: three tiers + a graph</h2>
+
+  <div class="cards" style="margin-top:.7em;">
+    <div class="card cyan fragment fade-in"><div class="card-h">💬 Conversation</div>
+      <div class="card-b">Last N turns. Session-scoped, ephemeral. The here-and-now.</div></div>
+    <div class="card fragment fade-in"><div class="card-h">🗂️ Working</div>
+      <div class="card-b">Shared, namespaced scratch space with a TTL. Hand-off between sessions, tasks &amp; subagents.</div></div>
+    <div class="card green fragment fade-in"><div class="card-h">🧠 Long-term</div>
+      <div class="card-b">Permanent facts &amp; preferences. Recalled per-turn by BM25 (+ vector) search.</div></div>
+    <div class="card fragment fade-in" style="border-color:var(--gold)"><div class="card-h" style="color:var(--gold)">🕸️ Knowledge graph</div>
+      <div class="card-b">Entities &amp; relationships for structured, relational reasoning.</div></div>
+  </div>
+
+  <div class="fragment" style="margin-top:1.2em;">
+    <p class="lead">The trick isn't storing it — it's <strong>injecting only what's relevant</strong>, every turn, without token bloat.</p>
+  </div>
+  <p class="note fragment">Delta injection: a memory recalled once isn't re-injected the same session.</p>
+</section>
+
+<!-- ════════════════ 11 · SKILLS ════════════════ -->
+<section>
+  <p class="kicker">Spoke 2 — repeatable behavior</p>
+  <h2>Skills: <em>fixed</em> guides &amp; <em>evolving</em> know-how</h2>
+  <p class="lead" style="margin:.2em 0 .9em;">Memory stores <em>facts</em>. Skills store <strong>how to do something</strong> — markdown procedures, recalled by BM25.</p>
+
+  <div class="cards">
+    <div class="card fragment fade-in" style="min-width:300px;">
+      <div class="card-h">📘 Subsystem guides</div>
+      <div class="card-b">Authored, fixed. "How to use the email MCP," "how working memory works." Ship with the agent.</div></div>
+    <div class="card green fragment fade-in" style="min-width:300px;">
+      <div class="card-h">🌱 Mutable skills</div>
+      <div class="card-b">The agent <strong style="color:var(--green)">writes its own</strong> — captures a procedure that worked, then refines it over time.</div></div>
+  </div>
+
+  <svg viewBox="0 0 880 110" style="width:80%; margin-top:1.2em;" class="fragment fade-in">
+    <defs><marker id="s" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4fd18b"/></marker></defs>
+    <text x="60" y="55" font-size="15" class="lbl-dim">do task</text>
+    <line x1="120" y1="50" x2="200" y2="50" stroke="#4fd18b" stroke-width="2" marker-end="url(#s)"/>
+    <rect x="205" y="28" width="150" height="46" rx="10" fill="#152a16" stroke="#4fd18b"/>
+    <text x="280" y="56" text-anchor="middle" font-size="15" fill="#4fd18b">write skill</text>
+    <line x1="355" y1="50" x2="435" y2="50" stroke="#4fd18b" stroke-width="2" marker-end="url(#s)"/>
+    <rect x="440" y="28" width="150" height="46" rx="10" fill="#152a16" stroke="#4fd18b"/>
+    <text x="515" y="56" text-anchor="middle" font-size="15" fill="#4fd18b">reuse</text>
+    <line x1="590" y1="50" x2="670" y2="50" stroke="#4fd18b" stroke-width="2" marker-end="url(#s)"/>
+    <rect x="675" y="28" width="170" height="46" rx="10" fill="#152a16" stroke="#4fd18b"/>
+    <text x="760" y="56" text-anchor="middle" font-size="15" fill="#4fd18b">refine / merge</text>
+  </svg>
+  <p class="note fragment">The refine step happens offline — in the dream. →</p>
+</section>
+
+<!-- ════════════════ 12 · SCHEDULED TASKS ════════════════ -->
+<section>
+  <p class="kicker">Spoke 3 — autonomy</p>
+  <h2>Tasks on a schedule</h2>
+  <p class="lead" style="margin:.2em 0 1em;">No user required. Cron-driven "patrol" tasks fire on their own — <strong>each with its own directive.</strong></p>
+
+  <svg viewBox="0 0 920 280" style="width:84%; max-height:42vh;">
+    <defs><marker id="c" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#8a9bb0"/></marker></defs>
+    <!-- clock -->
+    <circle cx="110" cy="140" r="56" fill="#0d1b2a" stroke="#f4a13c" stroke-width="2.5"/>
+    <line x1="110" y1="140" x2="110" y2="104" stroke="#f4a13c" stroke-width="3"/>
+    <line x1="110" y1="140" x2="136" y2="140" stroke="#f4a13c" stroke-width="3"/>
+    <text x="110" y="222" text-anchor="middle" font-size="15" class="lbl-gold">cron</text>
+
+    <g class="fragment fade-in" data-fragment-index="1">
+      <line x1="166" y1="120" x2="300" y2="70" stroke="#8a9bb0" stroke-width="2" marker-end="url(#c)"/>
+      <rect x="305" y="44" width="290" height="58" rx="12" fill="#122236" stroke="#24405e"/>
+      <text x="325" y="70" font-size="16">📨 Inbox patrol</text>
+      <text x="325" y="90" font-size="12" class="lbl-dim">directive: triage, flag urgent</text>
+    </g>
+    <g class="fragment fade-in" data-fragment-index="2">
+      <line x1="170" y1="140" x2="300" y2="140" stroke="#8a9bb0" stroke-width="2" marker-end="url(#c)"/>
+      <rect x="305" y="111" width="290" height="58" rx="12" fill="#122236" stroke="#24405e"/>
+      <text x="325" y="137" font-size="16">💓 Heartbeat / briefing</text>
+      <text x="325" y="157" font-size="12" class="lbl-dim">directive: summarize, alert</text>
+    </g>
+    <g class="fragment fade-in" data-fragment-index="3">
+      <line x1="166" y1="160" x2="300" y2="210" stroke="#8a9bb0" stroke-width="2" marker-end="url(#c)"/>
+      <rect x="305" y="178" width="290" height="58" rx="12" fill="#122236" stroke="#24405e"/>
+      <text x="325" y="204" font-size="16">🔎 Watch / monitor</text>
+      <text x="325" y="224" font-size="12" class="lbl-dim">directive: detect change, report</text>
+    </g>
+    <g class="fragment fade-in" data-fragment-index="3">
+      <line x1="595" y1="140" x2="700" y2="140" stroke="#8a9bb0" stroke-width="2" marker-end="url(#c)"/>
+      <rect x="705" y="111" width="195" height="58" rx="12" fill="#122236" stroke="#2ec4ff"/>
+      <text x="802" y="137" text-anchor="middle" font-size="15" class="lbl-cyan">→ working memory</text>
+      <text x="802" y="157" text-anchor="middle" font-size="12" class="lbl-dim">findings for you, later</text>
+    </g>
+  </svg>
+  <p class="note fragment" data-fragment-index="3">Same harness, same LLM — a <em>different directive</em> turns it into a different worker.</p>
+</section>
+
+<!-- ════════════════ 13 · DREAMS ════════════════ -->
+<section data-background-gradient="radial-gradient(ellipse at 50% 40%, #15203f 0%, #0a1422 72%)">
+  <p class="kicker">Spoke 4 — self-learning</p>
+  <h2>RockBot <em>dreams</em></h2>
+  <p class="lead" style="margin:.2em 0 .9em;">A background cycle that runs offline and <strong>refactors the agent's own knowledge</strong> — no user, no goals changed.</p>
+
+  <div class="cards">
+    <div class="card cyan fragment fade-in"><div class="card-h">🧠 Consolidate memory</div>
+      <div class="card-b">Merge duplicates, decay stale facts, mine anti-patterns from corrections.</div></div>
+    <div class="card green fragment fade-in"><div class="card-h">🌱 Optimize skills</div>
+      <div class="card-b">Refine, merge, and cluster the skills it has written.</div></div>
+    <div class="card fragment fade-in" style="border-color:var(--gold)"><div class="card-h" style="color:var(--gold)">🔀 Tune LLM routing</div>
+      <div class="card-b">Send the right work to the right model — cost &amp; quality.</div></div>
+    <div class="card fragment fade-in"><div class="card-h">🪞 Infer preferences</div>
+      <div class="card-b">Notice patterns across conversations; learn how you like to work.</div></div>
+  </div>
+  <p class="note fragment" style="margin-top:1.1em;">Yesterday's experience makes tomorrow's agent sharper — automatically.</p>
+</section>
+
+<!-- ════════════════ 14 · LEAST PRIVILEGE ════════════════ -->
+<section>
+  <p class="kicker">Governance — trust &amp; isolation</p>
+  <h2>Principle of least privilege</h2>
+  <p class="lead" style="margin:.2em 0 1em;">The core philosophy, restated: <strong>nothing trusts the LLM.</strong> The core agent holds <em>no keys, no passwords.</em></p>
+
+  <svg viewBox="0 0 920 300" style="width:84%; max-height:44vh;">
+    <defs><marker id="p" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#8a9bb0"/></marker></defs>
+    <!-- core agent -->
+    <rect x="60" y="100" width="240" height="100" rx="16" fill="#0d1b2a" stroke="#f4a13c" stroke-width="2.5"/>
+    <text x="180" y="140" text-anchor="middle" font-size="19" class="lbl-gold">Core agent</text>
+    <text x="180" y="168" text-anchor="middle" font-size="14" class="lbl-dim">🚫 no secrets</text>
+    <text x="180" y="190" text-anchor="middle" font-size="13" class="lbl-dim">only LLM keys</text>
+
+    <!-- isolated services holding secrets -->
+    <g class="fragment fade-in" data-fragment-index="1">
+      <line x1="300" y1="130" x2="600" y2="70" stroke="#8a9bb0" stroke-width="2" marker-end="url(#p)"/>
+      <rect x="605" y="40" width="280" height="62" rx="12" fill="#122236" stroke="#2ec4ff"/>
+      <text x="625" y="66" font-size="16" class="lbl-cyan">🔐 MCP server</text>
+      <text x="625" y="88" font-size="12" class="lbl-dim">holds the email / API credentials</text>
+    </g>
+    <g class="fragment fade-in" data-fragment-index="2">
+      <line x1="300" y1="150" x2="600" y2="150" stroke="#8a9bb0" stroke-width="2" marker-end="url(#p)"/>
+      <rect x="605" y="120" width="280" height="62" rx="12" fill="#122236" stroke="#2ec4ff"/>
+      <text x="625" y="146" font-size="16" class="lbl-cyan">🔐 Isolated service</text>
+      <text x="625" y="168" font-size="12" class="lbl-dim">scoped, auditable, revocable</text>
+    </g>
+    <g class="fragment fade-in" data-fragment-index="3">
+      <line x1="300" y1="170" x2="600" y2="230" stroke="#8a9bb0" stroke-width="2" marker-end="url(#p)"/>
+      <rect x="605" y="200" width="280" height="62" rx="12" fill="#122236" stroke="#2ec4ff"/>
+      <text x="625" y="226" font-size="16" class="lbl-cyan">🔐 Message bus</text>
+      <text x="625" y="248" font-size="12" class="lbl-dim">no in-process LLM code</text>
+    </g>
+  </svg>
+  <p class="note fragment" data-fragment-index="3">A compromised prompt can't leak a secret the agent never had.</p>
+</section>
+
+<!-- ════════════════ 15 · SANDBOXED EXECUTION ════════════════ -->
+<section>
+  <p class="kicker">Governance — trust &amp; isolation</p>
+  <h2>Untrusted code runs <em>sandboxed</em></h2>
+  <p class="lead" style="margin:.2em 0 1em;">RockBot can run Python and pull web pages — but never in-process.</p>
+
+  <div class="cards">
+    <div class="card green fragment fade-in" style="min-width:340px;">
+      <div class="card-h">🐍 Python execution</div>
+      <div class="card-b">Runs in an <strong style="color:var(--green)">ephemeral, low-privilege container</strong>. Spun up per run, destroyed after. No host access, no secrets, minimal blast radius.</div></div>
+    <div class="card cyan fragment fade-in" style="min-width:340px;">
+      <div class="card-h">🌐 Web search &amp; fetch</div>
+      <div class="card-b">Search the web and retrieve pages — but that content is <strong style="color:var(--cyan)">untrusted input</strong>, handled with the same suspicion as the LLM's output.</div></div>
+  </div>
+
+  <p class="lead fragment" style="margin-top:1.3em;">Same pattern everywhere: <strong>assume the LLM (and the web) can be wrong or hostile</strong> — and contain it.</p>
+</section>
+
+<!-- ════════════════ 16 · RECAP ════════════════ -->
+<section data-background-gradient="radial-gradient(ellipse at 50% 30%, #16304d 0%, #0a1422 72%)">
+  <p class="kicker">The working model</p>
+  <div class="equation" style="margin:.3em 0 1em;">
+    <span class="term agent">Agent</span>
+    <span class="op">=</span>
+    <span class="term harness">Harness</span>
+    <span class="op">+</span>
+    <span class="term llm">LLM</span>
+    <span class="op">+</span>
+    <span class="term directive">Directives</span>
+  </div>
+
+  <p class="lead">Get the core right, and it extends:</p>
+  <div style="margin-top:.6em;">
+    <span class="pill cyan">memory</span>
+    <span class="pill cyan">skills</span>
+    <span class="pill" style="color:var(--green);border-color:var(--green)">self-learning</span>
+    <span class="pill gold">scheduled tasks</span>
+    <span class="pill gold">dreams</span>
+    <span class="pill">MCP</span>
+    <span class="pill">A2A</span>
+    <span class="pill">least privilege</span>
+  </div>
+
+  <p class="lead fragment" style="margin-top:1.6em;">From abstract "agent" talk to a working model for how agentic<br>systems are <strong>designed, governed, and extended.</strong></p>
+
+  <p class="note fragment" style="margin-top:1.6em;">
+    <img src="assets/rockbot.png" style="width:34px; vertical-align:middle; border:none; box-shadow:none; background:none; margin-right:8px;">
+    rockbot.dev &nbsp;·&nbsp; github.com/MarimerLLC/rockbot &nbsp;·&nbsp; blog.lhotka.net
+  </p>
+</section>
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    transition: 'fade',
+    transitionSpeed: 'fast',
+    backgroundTransition: 'fade',
+    slideNumber: 'c/t',
+    width: 1280,
+    height: 720,
+    margin: 0.06,
+    controlsTutorial: false,
+    // PDF export (index.html?print-pdf): one page per slide, fully built.
+    pdfSeparateFragments: false,
+    pdfMaxPagesPerSlide: 1,
+  });
+</script>
+</body>
+</html>
