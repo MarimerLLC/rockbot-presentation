@@ -177,6 +177,54 @@
   <p class="note fragment" style="margin-top:1em;">Change behavior without changing code.</p>
 </section>
 
+<!-- ════════════════ 5B · THE CONTEXT WINDOW ════════════════ -->
+<section>
+  <p class="kicker">Composition — the assembled prompt</p>
+  <h2>What actually <em>reaches</em> the LLM</h2>
+  <p class="lead" style="margin:.12em 0 .42em;">One ordered window, assembled each turn — and sequenced to protect the prompt cache:</p>
+
+  <div class="ctx-edge">▲ top · earliest tokens · the stable, cached prefix</div>
+  <div class="ctxwin">
+    <div class="ctxlayer fragment fade-in" data-fragment-index="1" style="border-left-color:var(--gold)">
+      <div class="ctx-main"><span class="ctx-title" style="color:var(--gold)">System prompt</span>
+        <span class="ctx-sub">soul · safety · directives · memory rules · style · active rules · guardrails</span></div>
+      <span class="ctx-role" style="color:var(--green)">cached ✓</span>
+    </div>
+    <div class="ctxlayer fragment fade-in" data-fragment-index="2" style="border-left-color:var(--cyan)">
+      <div class="ctx-main"><span class="ctx-title" style="color:var(--cyan)">Conversation history</span>
+        <span class="ctx-sub">previous turns — stable prefix, reused unchanged</span></div>
+      <span class="ctx-role" style="color:var(--green)">cached ✓</span>
+    </div>
+
+    <div class="ctx-divider fragment fade-in" data-fragment-index="3">— prompt-cache boundary · everything below is rebuilt every turn —</div>
+
+    <div class="ctxlayer fragment fade-in" data-fragment-index="4" style="border-left-color:var(--steel)">
+      <div class="ctx-main"><span class="ctx-title">Date &amp; time</span>
+        <span class="ctx-sub">minute-rounded, placed <em>here</em> so a fresh timestamp can't bust the cache</span></div>
+      <span class="ctx-role" style="color:var(--gold)">per-turn</span>
+    </div>
+    <div class="ctxlayer fragment fade-in" data-fragment-index="5" style="border-left-color:var(--cyan); background:#0f2233">
+      <div class="ctx-main"><span class="ctx-title" style="color:var(--cyan)">Current user message</span>
+        <span class="ctx-sub">the new turn — what the model is answering</span></div>
+      <span class="ctx-role" style="color:var(--cyan)">user</span>
+    </div>
+    <div class="ctxlayer fragment fade-in" data-fragment-index="6" style="border-left-color:var(--green)">
+      <div class="ctx-main"><span class="ctx-title" style="color:var(--green)">Recalled memory</span>
+        <span class="ctx-sub">long-term (BM25) · episodic · identity · knowledge graph</span></div>
+      <span class="ctx-role" style="color:var(--gold)">per-turn · delta</span>
+    </div>
+    <div class="ctxlayer fragment fade-in" data-fragment-index="7" style="border-left-color:var(--gold)">
+      <div class="ctx-main"><span class="ctx-title" style="color:var(--gold)">Skills · services · working memory</span>
+        <span class="ctx-sub">matched skills · A2A + MCP hints · scratch · patrol · subagent research</span></div>
+      <span class="ctx-role" style="color:var(--gold)">per-turn</span>
+    </div>
+  </div>
+  <div class="ctx-edge bottom">▼ newest tokens · the LLM generates from here</div>
+
+  <p class="note fragment" data-fragment-index="8" style="margin-top:.4em;">
+    <strong>Date/time sits below the cache boundary on purpose</strong> — minute-rounded and after the stable prefix, so a per-turn timestamp doesn't bust the provider's prompt cache. Tool definitions (MCP · CLI · API) ride alongside in the request's tool list, not the messages.</p>
+</section>
+
 <!-- ════════════════ 6 · MEET ROCKBOT ════════════════ -->
 <section data-background-gradient="radial-gradient(ellipse at 70% 50%, #16304d 0%, #0a1422 70%)">
   <div style="display:flex; align-items:center; gap:1.4em;">

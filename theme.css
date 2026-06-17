@@ -132,3 +132,29 @@
 ul.clean { list-style: none; margin-left: 0; }
 ul.clean li { margin: 0.5em 0; padding-left: 1.4em; position: relative; }
 ul.clean li::before { content: "▹"; color: var(--gold); position: absolute; left: 0; }
+
+/* ── context-window vertical stack (composition slide) ───────── */
+.ctxwin {
+  display: flex; flex-direction: column; gap: 5px;
+  width: 97%; max-width: 1060px; margin: 0 auto;
+}
+.ctxlayer {
+  display: flex; align-items: center; justify-content: space-between; gap: 1em;
+  background: var(--panel);
+  border: 1px solid var(--line); border-left: 5px solid var(--line);
+  border-radius: 11px; padding: 0.3em 0.9em; text-align: left;
+}
+.ctxlayer .ctx-main { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.12em 0.5em; min-width: 0; }
+.ctxlayer .ctx-title { font-weight: 700; font-size: 0.74em; white-space: nowrap; }
+.ctxlayer .ctx-sub { color: var(--ink-dim); font-size: 0.6em; }
+.ctxlayer .ctx-role {
+  font-family: "JetBrains Mono", monospace; font-size: 0.52em;
+  color: var(--steel); white-space: nowrap; opacity: 0.85; letter-spacing: 0.02em;
+}
+.ctx-edge { font-size: 0.56em; color: var(--steel); text-align: center; margin: 0.26em 0; letter-spacing: 0.05em; }
+.ctx-edge.bottom { color: var(--gold); }
+.ctx-divider {
+  text-align: center; font-size: 0.5em; color: var(--gold-2);
+  letter-spacing: 0.04em; font-weight: 600; text-transform: uppercase;
+  padding: 0.12em 0; margin: 1px 0;
+}
